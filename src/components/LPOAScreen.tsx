@@ -13,101 +13,128 @@ const BORDER = '#3a3a3c';
 
 function downloadSignedCopy(sig: SignatureData) {
   const doc = new jsPDF({ unit: 'pt', format: 'letter' });
-  const margin = 60;
+  const margin = 72;
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const contentW = pageW - margin * 2;
   let y = margin;
+
+  const hexToRgb = (hex: string) =>
+    hex.match(/\w\w/g)!.map(h => parseInt(h, 16)) as [number, number, number];
+
+  // Returns height that will be used (without advancing y), for planning
+  const measureText = (text: string, size: number, lineHeight: number) => {
+    doc.setFontSize(size);
+    const lines = doc.splitTextToSize(text, contentW);
+    return lines.length * size * lineHeight;
+  };
 
   const addText = (text: string, opts: {
     size?: number; bold?: boolean; color?: string; lineHeight?: number; indent?: number;
   } = {}) => {
-    const { size = 11, bold = false, color = '#111111', lineHeight = 1.6, indent = 0 } = opts;
+    const { size = 11, bold = false, color = '#111111', lineHeight = 1.45, indent = 0 } = opts;
     doc.setFontSize(size);
-    doc.setFont('times', bold ? 'bold' : 'normal');
-    const [r, g, b] = color.match(/\w\w/g)!.map(h => parseInt(h, 16));
+    doc.setFont('helvetica', bold ? 'bold' : 'normal');
+    const [r, g, b] = hexToRgb(color);
     doc.setTextColor(r, g, b);
     const lines = doc.splitTextToSize(text, contentW - indent);
     const lineH = size * lineHeight;
-    // Page break check
-    if (y + lines.length * lineH > doc.internal.pageSize.getHeight() - margin) {
+    if (y + lines.length * lineH > pageH - margin) {
       doc.addPage();
       y = margin;
     }
     doc.text(lines, margin + indent, y);
     y += lines.length * lineH;
-    return lineH;
   };
 
-  const addSpacer = (h = 10) => { y += h; };
+  const addSpacer = (h: number) => { y += h; };
 
-  const addField = (label: string, value: string) => {
-    if (y + 50 > doc.internal.pageSize.getHeight() - margin) { doc.addPage(); y = margin; }
-    addText(label.toUpperCase(), { size: 8, color: '#666666' });
-    addSpacer(4);
-    doc.setDrawColor(180, 180, 180);
+  const drawHRule = (color: [number, number, number] = [210, 210, 210]) => {
+    doc.setDrawColor(...color);
     doc.line(margin, y, margin + contentW, y);
-    addSpacer(6);
-    addText(value, { size: 12 });
-    addSpacer(16);
   };
 
-  // Header
-  addText('LEGAL DOCUMENT', { size: 9, color: '#a08060' });
-  addSpacer(6);
-  addText('Limited Revocable Power of Attorney', { size: 20, bold: true });
-  addSpacer(12);
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, y, margin + contentW, y);
-  addSpacer(16);
+  // ── Header ──────────────────────────────────────────────────────────────
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb('#999999'));
+  doc.text('LEGAL DOCUMENT', margin, y);
+  addSpacer(14);
 
-  // Body paragraphs
-  const paragraphs: Array<{ text: string; boldPrefix?: string }> = [
-    { text: 'I, the undersigned principal (the "Principal"), do hereby grant to BlackCloak, Inc., a Delaware corporation, and its employees and representatives (the "Agent"), as my agent to have the full power and authority to exercise the following powers:' },
-    { text: 'To exercise data rights on my behalf and to remove my personally identifiable information from third party websites and databases and to otherwise prevent third parties from sharing my personally identifiable information with others.' },
-    { text: 'This grant of authority includes all incidental acts as are reasonably necessary to carry out such powers.' },
-    { boldPrefix: 'Reliance.', text: ' Any third party may rely upon the existence of this instrument and may deal in good faith with the Agent as if the Agent\'s authority were in full force and effect, unless such third party has actual knowledge of its revocation, termination, or invalidity.' },
-    { boldPrefix: 'Limitation.', text: ' This grant of authority is limited to the powers described above, and does not include any other powers not expressly granted herein. Principal does not grant the Agent any authority over the Principal\'s property, finances, medical or healthcare decisions, or business affairs.' },
-    { boldPrefix: 'Revocation.', text: ' The Principal shall have the unlimited right, at any time and for any reason, with or without cause, to revoke this power of attorney and the powers granted herein. This power of attorney shall automatically be revoked upon termination of the agreement between Principal and Agent.' },
-    { boldPrefix: 'Acceptance.', text: ' The Agent accepts this appointment as power of attorney subject to the terms of this power of attorney and the agreement between Principal and Agent.' },
-  ];
+  doc.setFontSize(22);
+  doc.setFont('helvetica', 'bold');
+  doc.setTextColor(...hexToRgb('#111111'));
+  doc.text('Limited Revocable Power of Attorney', margin, y);
+  addSpacer(10);
 
-  for (const p of paragraphs) {
-    if (p.boldPrefix) {
-      // Render bold prefix inline then normal text
-      doc.setFontSize(11);
-      doc.setFont('times', 'bold');
-      doc.setTextColor(17, 17, 17);
-      const prefixW = doc.getTextWidth(p.boldPrefix + ' ');
-      doc.text(p.boldPrefix, margin, y);
-      doc.setFont('times', 'normal');
-      const rest = doc.splitTextToSize(p.text, contentW - prefixW);
-      doc.text(rest[0], margin + prefixW, y);
-      y += 11 * 1.6;
-      if (rest.length > 1) {
-        const remaining = doc.splitTextToSize(rest.slice(1).join(' '), contentW);
-        doc.text(remaining, margin, y);
-        y += remaining.length * 11 * 1.6;
-      }
-    } else {
-      addText(p.text);
+  drawHRule();
+  addSpacer(18);
+
+  // ── Body ────────────────────────────────────────────────────────────────
+  const bodySize = 10.5;
+  const bodyLH = 1.5;
+
+  const plain = (text: string) => {
+    addText(text, { size: bodySize, lineHeight: bodyLH });
+    addSpacer(9);
+  };
+
+  const prefixed = (boldPart: string, rest: string) => {
+    // Estimate height needed for this paragraph
+    const fullText = boldPart + rest;
+    const needed = measureText(fullText, bodySize, bodyLH) + 9;
+    if (y + needed > pageH - margin) { doc.addPage(); y = margin; }
+
+    doc.setFontSize(bodySize);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...hexToRgb('#111111'));
+    const bw = doc.getTextWidth(boldPart);
+
+    // First line: bold prefix + rest on same line
+    const firstLineRest = doc.splitTextToSize(rest, contentW - bw);
+    doc.text(boldPart, margin, y);
+    doc.setFont('helvetica', 'normal');
+    doc.text(firstLineRest[0], margin + bw, y);
+    y += bodySize * bodyLH;
+
+    // Remaining lines (if any) full-width
+    if (firstLineRest.length > 1) {
+      const overflow = doc.splitTextToSize(firstLineRest.slice(1).join(' '), contentW);
+      doc.text(overflow, margin, y);
+      y += overflow.length * bodySize * bodyLH;
     }
-    addSpacer(8);
+    addSpacer(9);
+  };
+
+  plain('I, the undersigned principal (the "Principal"), do hereby grant to BlackCloak, Inc., a Delaware corporation, and its employees and representatives (the "Agent"), as my agent to have the full power and authority to exercise the following powers:');
+  plain('To exercise data rights on my behalf and to remove my personally identifiable information from third party websites and databases and to otherwise prevent third parties from sharing my personally identifiable information with others.');
+  plain('This grant of authority includes all incidental acts as are reasonably necessary to carry out such powers.');
+  prefixed('Reliance.', ' Any third party may rely upon the existence of this instrument and may deal in good faith with the Agent as if the Agent\'s authority were in full force and effect, unless such third party has actual knowledge of its revocation, termination, or invalidity.');
+  prefixed('Limitation.', ' This grant of authority is limited to the powers described above, and does not include any other powers not expressly granted herein. Principal does not grant the Agent any authority over the Principal\'s property, finances, medical or healthcare decisions, or business affairs.');
+  prefixed('Revocation.', ' The Principal shall have the unlimited right, at any time and for any reason, with or without cause, to revoke this power of attorney and the powers granted herein. This power of attorney shall automatically be revoked upon termination of the agreement between Principal and Agent.');
+  prefixed('Acceptance.', ' The Agent accepts this appointment as power of attorney subject to the terms of this power of attorney and the agreement between Principal and Agent.');
+
+  // ── Signature section ───────────────────────────────────────────────────
+  // Calculate total height needed for the entire signature block so it
+  // always starts on a fresh page if it won't fit together.
+  const sigBlockHeight = 220; // conservative estimate for all fields
+  if (y + sigBlockHeight > pageH - margin) {
+    doc.addPage();
+    y = margin;
+  } else {
+    addSpacer(12);
+    drawHRule();
+    addSpacer(20);
   }
 
-  // Signature section divider
+  // Signature
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(...hexToRgb('#888888'));
+  doc.text('SIGNATURE', margin, y);
   addSpacer(8);
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, y, margin + contentW, y);
-  addSpacer(20);
-
-  // Signature field
-  if (y + 80 > doc.internal.pageSize.getHeight() - margin) { doc.addPage(); y = margin; }
-  addText('SIGNATURE', { size: 8, color: '#666666' });
-  addSpacer(4);
 
   if (sig.mode === 'draw' && sig.signatureUrl) {
-    // Draw signature image - invert white-on-transparent to black-on-white
-    // Create a temporary canvas to invert the colors
     const canvas = document.createElement('canvas');
     const img = new Image();
     img.src = sig.signatureUrl;
@@ -115,7 +142,6 @@ function downloadSignedCopy(sig: SignatureData) {
     canvas.height = img.height || 80;
     const ctx = canvas.getContext('2d')!;
     ctx.drawImage(img, 0, 0);
-    // Invert pixels: white strokes → black strokes
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < imageData.data.length; i += 4) {
       const alpha = imageData.data[i + 3];
@@ -127,16 +153,35 @@ function downloadSignedCopy(sig: SignatureData) {
       }
     }
     ctx.putImageData(imageData, 0, 0);
-    const invertedDataUrl = canvas.toDataURL('image/png');
-    doc.addImage(invertedDataUrl, 'PNG', margin, y, 180, 50);
-    y += 56;
+    doc.addImage(canvas.toDataURL('image/png'), 'PNG', margin, y, 200, 52);
+    y += 52;
   } else if (sig.typedName) {
-    addText(sig.typedName, { size: 22, bold: false });
+    doc.setFontSize(26);
+    doc.setFont('times', 'italic');
+    doc.setTextColor(...hexToRgb('#111111'));
+    doc.text(sig.typedName, margin, y + 24);
+    y += 30;
   }
 
-  doc.setDrawColor(180, 180, 180);
-  doc.line(margin, y, margin + contentW, y);
-  addSpacer(20);
+  addSpacer(6);
+  drawHRule([180, 180, 180]);
+  addSpacer(18);
+
+  // Helper for labeled fields
+  const addField = (label: string, value: string) => {
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb('#888888'));
+    doc.text(label.toUpperCase(), margin, y);
+    addSpacer(10);
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(...hexToRgb('#111111'));
+    doc.text(value, margin, y);
+    addSpacer(6);
+    drawHRule([200, 200, 200]);
+    addSpacer(16);
+  };
 
   addField('Printed Name', sig.printedName);
   addField('Current City and State', sig.cityState);
