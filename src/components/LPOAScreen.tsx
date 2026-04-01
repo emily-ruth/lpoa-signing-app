@@ -192,48 +192,36 @@ export function LPOAScreen({ sigData, onSign, onRescind }: LPOAScreenProps) {
           <span style={{ color: '#fff', fontWeight: '600' }}>Acceptance.</span> The Agent accepts this appointment as power of attorney subject to the terms of this power of attorney and the agreement between Principal and Agent.
         </p>
 
-        {/* Signature section */}
-        <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: '20px' }}>
-          {signed && sigData ? (
-            <>
-              {/* Filled signature */}
-              <div className="mb-4">
-                <p style={{ color: MUTED, fontSize: '11px', marginBottom: '6px', letterSpacing: '0.05em' }} className="uppercase">Signature</p>
-                <div style={{ borderBottom: `1px solid #48484a`, minHeight: '44px', display: 'flex', alignItems: 'center', paddingBottom: '4px' }}>
-                  {sigData.mode === 'draw' && sigData.signatureUrl ? (
-                    <img src={sigData.signatureUrl} alt="Signature" style={{ maxHeight: '40px', filter: 'invert(1) brightness(0.9)' }} />
-                  ) : (
-                    <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '26px', color: '#fff' }}>
-                      {sigData.typedName}
-                    </span>
-                  )}
+        {/* Signature section — only shown after signing */}
+        {signed && sigData && (
+          <div style={{ borderTop: `1px solid ${BORDER}`, paddingTop: '20px' }}>
+            {/* Filled signature */}
+            <div className="mb-4">
+              <p style={{ color: MUTED, fontSize: '11px', marginBottom: '6px', letterSpacing: '0.05em' }} className="uppercase">Signature</p>
+              <div style={{ borderBottom: `1px solid #48484a`, minHeight: '44px', display: 'flex', alignItems: 'center', paddingBottom: '4px' }}>
+                {sigData.mode === 'draw' && sigData.signatureUrl ? (
+                  <img src={sigData.signatureUrl} alt="Signature" style={{ maxHeight: '40px', filter: 'invert(1) brightness(0.9)' }} />
+                ) : (
+                  <span style={{ fontFamily: "'Dancing Script', cursive", fontSize: '26px', color: '#fff' }}>
+                    {sigData.typedName}
+                  </span>
+                )}
+              </div>
+            </div>
+            {[
+              { label: 'Printed Name', value: sigData.printedName },
+              { label: 'Current City and State', value: sigData.cityState },
+              { label: 'Effective Date', value: sigData.effectiveDate },
+            ].map(({ label, value }) => (
+              <div key={label} className="mb-4">
+                <p style={{ color: MUTED, fontSize: '11px', marginBottom: '6px', letterSpacing: '0.05em' }} className="uppercase">{label}</p>
+                <div style={{ borderBottom: `1px solid #48484a`, minHeight: '28px', display: 'flex', alignItems: 'center', paddingBottom: '4px' }}>
+                  <span style={{ fontSize: '14px', color: '#e5e5e7' }}>{value}</span>
                 </div>
               </div>
-              {[
-                { label: 'Printed Name', value: sigData.printedName },
-                { label: 'Current City and State', value: sigData.cityState },
-                { label: 'Effective Date', value: sigData.effectiveDate },
-              ].map(({ label, value }) => (
-                <div key={label} className="mb-4">
-                  <p style={{ color: MUTED, fontSize: '11px', marginBottom: '6px', letterSpacing: '0.05em' }} className="uppercase">{label}</p>
-                  <div style={{ borderBottom: `1px solid #48484a`, minHeight: '28px', display: 'flex', alignItems: 'center', paddingBottom: '4px' }}>
-                    <span style={{ fontSize: '14px', color: '#e5e5e7' }}>{value}</span>
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : (
-            /* Blank fields */
-            <>
-              {['Signature', 'Printed Name', 'Current City and State', 'Effective Date'].map((label) => (
-                <div key={label} className="mb-4">
-                  <p style={{ color: MUTED, fontSize: '11px', marginBottom: '6px', letterSpacing: '0.05em' }} className="uppercase">{label}</p>
-                  <div style={{ borderBottom: `1px solid #48484a`, height: '28px' }} />
-                </div>
-              ))}
-            </>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
 
         <p style={{ color: MUTED, fontSize: '12px', lineHeight: '1.5', marginBottom: '8px' }}>
           By signing, you agree to grant BlackCloak, Inc. the limited powers described above.
