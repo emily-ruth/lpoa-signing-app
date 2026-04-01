@@ -12,7 +12,7 @@ const BORDER = '#3a3a3c';
 
 function downloadSignedCopy(sig: SignatureData) {
   const sigHtml = sig.mode === 'draw' && sig.signatureUrl
-    ? `<img src="${sig.signatureUrl}" style="height:60px;filter:invert(0)" />`
+    ? `<img src="${sig.signatureUrl}" style="height:60px;filter:invert(1)" />`
     : `<span style="font-family:'Dancing Script',cursive;font-size:32px">${sig.typedName}</span>`;
 
   const html = `<!DOCTYPE html>
