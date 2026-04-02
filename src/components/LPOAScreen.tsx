@@ -77,7 +77,7 @@ function downloadSignedCopy(sig: SignatureData) {
 
   // ── Signature section ────────────────────────────────────────────────────
   // Keep the whole block together — estimate height and page-break if needed
-  const sigBlockH = sig.mode === 'draw' ? 220 : 190;
+  const sigBlockH = sig.mode === 'draw' ? 290 : 260;
   ensureRoom(sigBlockH);
   y += 14;
 
@@ -115,7 +115,7 @@ function downloadSignedCopy(sig: SignatureData) {
     // Underline below the image
     y += 6;
     hRule();
-    y += 16;
+    y += 30;
   } else {
     // Typed name in italic — same baseline as label
     doc.setFontSize(22);
@@ -126,19 +126,33 @@ function downloadSignedCopy(sig: SignatureData) {
     // Underline 4pt below text baseline
     y += 4;
     hRule();
-    y += 16;
+    y += 30;
   }
 
-  // Helper: "Label: Value" on one line, underline directly below
+  // Helper: label in normal weight, value in larger bold — then underline below
   const addSignatureField = (label: string, value: string) => {
-    doc.setFontSize(bodySize);
+    const labelSize = 11;
+    const valueSize = 15;
+
+    // Label: e.g. "Printed Name: "
+    doc.setFontSize(labelSize);
     doc.setFont('times', 'normal');
     doc.setTextColor(0, 0, 0);
-    doc.text(`${label}: ${value}`, margin, y);
-    // Draw underline 3pt below text baseline (sits right under the text)
-    y += 3;
+    const labelStr = `${label}: `;
+    const labelW = doc.getTextWidth(labelStr);
+    doc.text(labelStr, margin, y);
+
+    // Value: larger, bold, right after the label on the same baseline
+    doc.setFontSize(valueSize);
+    doc.setFont('times', 'bold');
+    doc.text(value, margin + labelW, y);
+
+    // Underline sits 4pt below the (taller) value baseline
+    y += 4;
     hRule();
-    y += 16;
+
+    // Double-spaced gap before next field
+    y += 30;
   };
 
   addSignatureField('Printed Name', sig.printedName);
