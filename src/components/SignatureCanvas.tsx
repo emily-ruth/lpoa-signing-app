@@ -61,7 +61,6 @@ export function SignatureCanvas({ onBack, onSubmit }: SignatureCanvasProps) {
   const [mode, setMode] = useState<'draw' | 'type'>('draw');
   const [isDrawing, setIsDrawing] = useState(false);
   const [canvasEmpty, setCanvasEmpty] = useState(true);
-  const [typedName, setTypedName] = useState('');
   const [printedName, setPrintedName] = useState('');
   const [cityState, setCityState] = useState('');
   const lastPos = useRef<{ x: number; y: number } | null>(null);
@@ -141,7 +140,7 @@ export function SignatureCanvas({ onBack, onSubmit }: SignatureCanvasProps) {
     setCanvasEmpty(true);
   }, []);
 
-  const sigValid = mode === 'draw' ? !canvasEmpty : typedName.trim().length > 0;
+  const sigValid = mode === 'draw' ? !canvasEmpty : printedName.trim().length > 0;
   const formValid = sigValid && printedName.trim().length > 0 && cityState.trim().length > 0;
 
   const handleSubmit = useCallback(() => {
@@ -150,9 +149,10 @@ export function SignatureCanvas({ onBack, onSubmit }: SignatureCanvasProps) {
       const url = canvasRef.current!.toDataURL('image/png');
       onSubmit({ mode, signatureUrl: url, printedName, cityState, effectiveDate: today });
     } else {
-      onSubmit({ mode, typedName: typedName.trim(), printedName, cityState, effectiveDate: today });
+      // Typed mode: the printed name IS the signature
+      onSubmit({ mode, typedName: printedName.trim(), printedName, cityState, effectiveDate: today });
     }
-  }, [formValid, mode, typedName, printedName, cityState, today, onSubmit]);
+  }, [formValid, mode, printedName, cityState, today, onSubmit]);
 
   return (
     <div style={{ backgroundColor: '#1c1c1e', color: '#fff' }} className="flex flex-col h-full w-full">
@@ -244,7 +244,7 @@ export function SignatureCanvas({ onBack, onSubmit }: SignatureCanvasProps) {
         ) : (
           <div className="mb-4">
             <p style={{ color: MUTED, fontSize: '11px', letterSpacing: '0.06em', marginBottom: '6px' }} className="uppercase">
-              Type your name
+              Signature preview
             </p>
             <div
               style={{
@@ -258,24 +258,22 @@ export function SignatureCanvas({ onBack, onSubmit }: SignatureCanvasProps) {
                 position: 'relative',
               }}
             >
-              <input
-                type="text"
-                value={typedName}
-                onChange={(e) => setTypedName(e.target.value)}
-                placeholder="Your full name"
-                style={{
-                  width: '100%',
-                  background: 'none',
-                  border: 'none',
-                  outline: 'none',
+              {printedName.trim().length > 0 ? (
+                <span style={{
                   fontFamily: "'Dancing Script', cursive",
                   fontSize: '26px',
                   color: '#fff',
-                  caretColor: GOLD,
-                }}
-              />
+                  lineHeight: 1,
+                }}>
+                  {printedName}
+                </span>
+              ) : (
+                <span style={{ color: '#48484a', fontSize: '13px' }}>
+                  Your name will appear here after you fill in Printed Name below
+                </span>
+              )}
             </div>
-            {typedName.trim().length > 0 && (
+            {printedName.trim().length > 0 && (
               <p style={{ color: MUTED, fontSize: '11px', marginTop: '4px' }}>
                 Typed signatures are legally binding
               </p>
