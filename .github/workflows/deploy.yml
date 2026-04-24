@@ -1,8 +1,23 @@
+# Deploys the Vite build to GitHub Pages.
+#
+# If "configure-pages" fails with: Get Pages site failed / HttpError: Not Found
+# 1. Repo → Settings → Pages
+# 2. Under "Build and deployment", set Source to: "GitHub Actions" (not "Deploy from a branch")
+# 3. Save, then re-run this workflow (Actions → failed run → Re-run jobs) or push again
+#
+# Optional: first-time "github-pages" environment may appear under Settings → Environments
+# (approve once if deployment protection is enabled).
+
 name: Deploy to GitHub Pages
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -16,16 +31,21 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '24'
           cache: npm
+
       - run: npm ci
       - run: npm run build
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
-      - uses: actions/deploy-pages@v4
+
+      - uses: actions/deploy-pages@v5
         id: deployment
