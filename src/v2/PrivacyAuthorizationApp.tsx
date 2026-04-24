@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { PhoneShell } from '../components/PhoneShell';
 import { EmbeddedSigningFlow } from './EmbeddedSigningFlow';
+import { LpoaDocumentSection } from './LpoaDocumentSection';
 import type { LpoaStatus } from './lpoa-status';
 import { getLpoaMemberStatus, isLpoaApiConfigured, postLpoaRevoke } from './lpoaSignApi';
 
@@ -108,38 +109,23 @@ function RevokeAuthorizationConfirm({
   );
 }
 
-function InformedConsentSection() {
+/** PRD / product context not duplicated in the Legal LPOA body. */
+function SupplementalPrivacyInformation() {
   return (
-    <section style={{ borderTop: `1px solid ${BORDER}`, paddingTop: '16px', marginTop: '4px' }}>
-      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '12px' }}>What you are authorizing</h2>
-      <ul style={{ margin: '0 0 14px 0', paddingLeft: '18px', color: '#e5e5e7', fontSize: '13px', lineHeight: 1.65 }}>
-        <li className="mb-2">
-          BlackCloak may act as your agent to exercise data rights and request removal of your personal information from third-party data brokers, including use of email addresses and phone numbers you provide so brokers can match your record.
-        </li>
-        <li className="mb-2">
-          Some broker networks only accept requests when you prove control of a contact already in their database; this authorization unlocks those removals.
-        </li>
-      </ul>
-
-      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>What this does not include</h2>
+    <section style={{ borderTop: `1px solid ${BORDER}`, paddingTop: '16px', marginTop: '20px' }}>
+      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Broker coverage unlocked by signing</h2>
       <p style={{ color: '#e5e5e7', fontSize: '13px', lineHeight: 1.65, marginBottom: '14px' }}>
-        It does not grant authority over your property, finances, medical or healthcare decisions, or general business affairs—only the limited data-broker removal powers in the LPOA text maintained by Legal.
+        Some identity-matched broker networks require this authorization before BlackCloak can use your real contact on file—including PeopleConnect / Intelius, RocketReach, and Apollo (PRD).
       </p>
 
-      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Brokers that require this authorization</h2>
+      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Membership and revocation</h2>
       <p style={{ color: '#e5e5e7', fontSize: '13px', lineHeight: 1.65, marginBottom: '14px' }}>
-        PeopleConnect / Intelius network, RocketReach, and Apollo (identity-matched sites that reject facade-email opt-outs per PRD).
+        The instrument above governs scope and revocation. Operationally, authorization remains relevant while your membership is active; you may also use Revoke Authorization on this page at any time (implementation guide §2D).
       </p>
 
-      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Duration and revocation</h2>
-      <p style={{ color: '#e5e5e7', fontSize: '13px', lineHeight: 1.65, marginBottom: '8px' }}>
-        The authorization stays in effect until your membership contract ends or you revoke it. You may revoke at any time, for any reason, from this page.
-      </p>
-      <p style={{ color: MUTED, fontSize: '11px', lineHeight: 1.5, marginBottom: '8px' }}>
-        Dropbox Sign retains an audit trail (timestamp, IP, signature hash) in the signed document per policy (implementation guide §1E / EULA).
-      </p>
-      <p style={{ color: MUTED, fontSize: '11px', lineHeight: 1.5 }}>
-        Final copy requires Legal sign-off (PRD).
+      <h2 style={{ fontSize: '15px', fontWeight: '700', color: '#fff', marginBottom: '10px' }}>Electronic signing</h2>
+      <p style={{ color: MUTED, fontSize: '12px', lineHeight: 1.55, marginBottom: '8px' }}>
+        You will sign the same Limited Revocable Power of Attorney via Dropbox Sign (embedded). Dropbox Sign retains an audit trail (timestamp, IP, signature hash) in the signed PDF per policy (implementation guide §1E / EULA).
       </p>
     </section>
   );
@@ -265,7 +251,7 @@ export function PrivacyAuthorizationApp() {
           </p>
           <h1 style={{ fontSize: '24px', lineHeight: 1.2, fontWeight: '700' }}>Privacy Authorization</h1>
           <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.55, marginTop: '10px' }}>
-            Limited Power of Attorney for data broker removal. Review the summary below, then sign with Dropbox Sign embedded in the app (implementation guide §2A–2B).
+            Read the Limited Revocable Power of Attorney below (Legal, March 10, 2026), then sign electronically with Dropbox Sign in the app (implementation guide §2A–2B).
           </p>
           {status === 'LPOA_ACTIVE' && signedAtIso && (
             <p style={{ color: '#e5e5e7', fontSize: '13px', marginTop: '12px' }}>
@@ -285,7 +271,8 @@ export function PrivacyAuthorizationApp() {
         <div style={{ backgroundColor: BORDER, height: '1px' }} className="mx-6" />
 
         <div className="flex-1 overflow-y-auto px-6 py-5">
-          <InformedConsentSection />
+          <LpoaDocumentSection />
+          <SupplementalPrivacyInformation />
         </div>
 
         <div className="px-6 pb-10 pt-3 flex flex-col gap-3" style={{ flexShrink: 0 }}>

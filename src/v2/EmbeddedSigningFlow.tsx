@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import HelloSign from 'hellosign-embedded';
 import { DropboxSignImplementationReference } from './DropboxSignImplementationReference';
 import { LPOA_TEMPLATE_MERGE_FIELDS } from './dropboxSignGuide';
+import { LPOA_DOCUMENT_VERSION_LABEL } from './lpoa-document-content';
 import { isLpoaApiConfigured, postLpoaEmbeddedSignSession } from './lpoaSignApi';
 
 const GOLD = '#c4a882';
@@ -109,6 +110,9 @@ export function EmbeddedSigningFlow({
           Dropbox Sign · Embedded
         </p>
         <h2 style={{ fontSize: '20px', fontWeight: '700', lineHeight: 1.25 }}>Sign your Privacy Authorization</h2>
+        <p style={{ color: MUTED, fontSize: '12px', lineHeight: 1.5, marginTop: '6px' }}>
+          Document: Limited Revocable Power of Attorney — {LPOA_DOCUMENT_VERSION_LABEL}
+        </p>
         <p style={{ color: MUTED, fontSize: '13px', lineHeight: 1.55, marginTop: '10px' }}>
           The backend creates a request with <code style={{ color: GOLD }}>create_embedded_with_template</code>, then returns a fresh <code style={{ color: GOLD }}>sign_url</code> (valid ~60 minutes; do not pre-cache).
         </p>
@@ -117,7 +121,7 @@ export function EmbeddedSigningFlow({
       <div className="flex-1 mx-6 mb-2 min-h-0 flex flex-col rounded-xl overflow-y-auto border" style={{ borderColor: BORDER, backgroundColor: '#0d0d0e' }}>
         <div className="p-4" style={{ fontSize: '12px', lineHeight: 1.55, color: '#d1d1d6' }}>
           <p className="mb-2 text-center" style={{ color: '#fff', fontWeight: '600', fontSize: '13px' }}>
-            Template merge fields (pre-filled)
+            Limited Revocable Power of Attorney — merge fields (pre-filled)
           </p>
           <p className="mb-3">
             {LPOA_TEMPLATE_MERGE_FIELDS.map((key) => (
